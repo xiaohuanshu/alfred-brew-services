@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>bundleid</key>
+	<string>com.xiaohuanshu.brewservices</string>
+	<key>category</key>
+	<string>Tools</string>
+	<key>connections</key>
+	<dict>
+		<key>08227D25-9B5D-4E9D-A351-1567E3F0C282</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>AB6C115E-DFE6-4CDB-A56D-5FB9B77A843F</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>3A49330D-F9CC-4CD8-AE28-D22A2BAC901F</string>
+				<key>modifiers</key>
+				<integer>1048576</integer>
+				<key>modifiersubtext</key>
+				<string>run command in termianl</string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>2A96B3F7-8C29-4FB7-8A5E-7516182FFF46</key>
+		<array/>
+		<key>3A49330D-F9CC-4CD8-AE28-D22A2BAC901F</key>
+		<array/>
+		<key>AB6C115E-DFE6-4CDB-A56D-5FB9B77A843F</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>2A96B3F7-8C29-4FB7-8A5E-7516182FFF46</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+	</dict>
+	<key>createdby</key>
+	<string>xiaohuanshu</string>
+	<key>description</key>
+	<string>服务</string>
+	<key>disabled</key>
+	<false/>
+	<key>name</key>
+	<string>brew-services</string>
+	<key>objects</key>
+	<array>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>lastpathcomponent</key>
+				<false/>
+				<key>onlyshowifquerypopulated</key>
+				<true/>
+				<key>removeextension</key>
+				<false/>
+				<key>text</key>
+				<string>{query}</string>
+				<key>title</key>
+				<string>Brew-Services</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.output.notification</string>
+			<key>uid</key>
+			<string>2A96B3F7-8C29-4FB7-8A5E-7516182FFF46</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>concurrently</key>
+				<false/>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>script</key>
+				<string>query=$1
+/usr/local/bin/brew services $query 2&gt;&amp;1</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>type</key>
+				<integer>0</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>AB6C115E-DFE6-4CDB-A56D-5FB9B77A843F</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>alfredfiltersresults</key>
+				<false/>
+				<key>alfredfiltersresultsmatchmode</key>
+				<integer>0</integer>
+				<key>argumenttrimmode</key>
+				<integer>0</integer>
+				<key>argumenttype</key>
+				<integer>1</integer>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>keyword</key>
+				<string>services</string>
+				<key>queuedelaycustom</key>
+				<integer>3</integer>
+				<key>queuedelayimmediatelyinitially</key>
+				<true/>
+				<key>queuedelaymode</key>
+				<integer>0</integer>
+				<key>queuemode</key>
+				<integer>1</integer>
+				<key>runningsubtext</key>
+				<string>loading...</string>
+				<key>script</key>
+				<string>#!/usr/bin/python
+# encoding: utf-8
+
+import sys
+from workflow import Workflow3, ICON_WARNING
+__version__ = '0.1'
+ICON_MAP = {
+    "stopped": "red.png",
+    "started": "green.png",
+}
+
+
+def get_services_data():
+    import os
+    lines = os.popen('/usr/local/bin/brew services list').read().split("\n")
+    item_lines = lines[1:]
+    services = []
+    for l in item_lines:
+        try:
+            service_name = l.split()[0]
+            service_status = l.split()[1]
+            services.append(
+                {'name': service_name, 'status': service_status, 'icon': ICON_MAP[service_status]})
+        except:
+            break
+    return services
+
+
+def key_for_filter(item):
+    return item['name']
+
+
+ACTION_DATA = [
+    {"name": 'run', "info": "Run the service %s without starting at login",
+        "icon": "icon.png"},
+    {"name": 'start', "info": "Start the service %s immediately and register it to launch at login", "icon": "icon.png"},
+    {"name": 'stop', "info": "Stop the service %s immediately and unregister it from launching at login", "icon": "icon.png"},
+    {"name": 'restart', "info": "Stop and start the service %s immediately and register it to launch at login", "icon": "icon.png"},
+]
+
+
+def main(wf):
+    query_string = wf.args[0] if len(wf.args) else None
+    if " " in query_string:
+        query, action_query = query_string.split(" ")
+    else:
+        query = query_string
+        action_query = None
+    log.info(query)
+    log.info(action_query)
+    services = wf.cached_data('services_data', get_services_data, max_age=5)
+    items = wf.filter(query, services, key_for_filter)
+    if not items:
+        wf.add_item('No matches', icon=ICON_WARNING)
+    if len(items) == 1 and query == items[0]['name']:
+        actions = wf.filter(action_query, ACTION_DATA, key_for_filter)
+        item = items[0]
+        for action in actions:
+            wf.add_item(title=item['name']+" "+action['name'],
+                        subtitle=action['info'] % item['name'],
+                        arg=action['name']+" "+item['name'],
+                        autocomplete=item['name']+" "+action['name'],
+                        valid=True,
+                        icon=action['icon']
+                        )
+    else:
+        for item in items:
+            wf.add_item(title=item['name'],
+                        subtitle=item['status'],
+                        arg="run "+item['name'],
+                        autocomplete=item['name'],
+                        valid=True,
+                        icon=item['icon']
+                        )
+    wf.send_feedback()
+
+
+if __name__ == '__main__':
+    wf = Workflow3(update_settings={
+        'github_slug': 'xiaohuanshu/alfred-brew-services',
+        'version': __version__,
+        'frequency': 7,
+        'prereleases': '-beta' in __version__
+    })
+    if wf.update_available:
+        wf.start_update()
+    log = wf.logger
+    sys.exit(wf.run(main))
+</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>subtext</key>
+				<string></string>
+				<key>title</key>
+				<string>Manage Brew Services</string>
+				<key>type</key>
+				<integer>3</integer>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>08227D25-9B5D-4E9D-A351-1567E3F0C282</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>escaping</key>
+				<integer>0</integer>
+				<key>script</key>
+				<string>/usr/local/bin/brew services {query}</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.terminalcommand</string>
+			<key>uid</key>
+			<string>3A49330D-F9CC-4CD8-AE28-D22A2BAC901F</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+	</array>
+	<key>readme</key>
+	<string></string>
+	<key>uidata</key>
+	<dict>
+		<key>08227D25-9B5D-4E9D-A351-1567E3F0C282</key>
+		<dict>
+			<key>xpos</key>
+			<integer>230</integer>
+			<key>ypos</key>
+			<integer>90</integer>
+		</dict>
+		<key>2A96B3F7-8C29-4FB7-8A5E-7516182FFF46</key>
+		<dict>
+			<key>xpos</key>
+			<integer>700</integer>
+			<key>ypos</key>
+			<integer>90</integer>
+		</dict>
+		<key>3A49330D-F9CC-4CD8-AE28-D22A2BAC901F</key>
+		<dict>
+			<key>xpos</key>
+			<integer>470</integer>
+			<key>ypos</key>
+			<integer>230</integer>
+		</dict>
+		<key>AB6C115E-DFE6-4CDB-A56D-5FB9B77A843F</key>
+		<dict>
+			<key>xpos</key>
+			<integer>470</integer>
+			<key>ypos</key>
+			<integer>90</integer>
+		</dict>
+	</dict>
+	<key>webaddress</key>
+	<string>https://github.com/xiaohuanshu/alfred-brew-services</string>
+</dict>
+</plist>
